@@ -4,6 +4,7 @@ import _ from 'lodash';
 import slugid from 'slugid';
 import taskcluster from 'taskcluster-client';
 import parseRoute from './util/route_parser';
+import addArtifactUploadedLinks from './transform/artifact_links';
 
 let events = new taskcluster.QueueEvents();
 let debug = Debug('taskcluster-treeherder:handler');
@@ -306,6 +307,10 @@ export class Handler {
     job.timeStarted = run.started;
     job.timeCompleted = run.resolved;
     job.logs = [createLogReference(this.queue, message.status.taskId, run)];
+    job = await addArtifactUploadedLinks(this.queue,
+                                         message.status.taskId,
+                                         message.runId,
+                                         job);
     await this.publishJobMessage(pushInfo, job, message.status.taskId);
   }
 
